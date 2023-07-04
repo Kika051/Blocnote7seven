@@ -22,5 +22,14 @@
 }
 
 label {
-  margin: 5px;
+  margin: 10px;
+}
+
+input {
+  width: 3rem;
+}
+
+.large-checkbox {
+  margin: 1rem;
+  transform: scale(2); /* Agrandir la checkbox en ajustant l'échelle */
 }

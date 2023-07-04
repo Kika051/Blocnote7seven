@@ -1,10 +1,11 @@
+/* eslint-disable react/no-array-index-key */
 import React, { useState } from "react";
 
 function Menu() {
   const [chicha, setChicha] = useState([
-    { nom: "Tête plate", prix: 13, checked: false, quantite: 1, saveur: "" },
-    { nom: "Khaloud", prix: 15, checked: false, quantite: 1, saveur: "" },
-    { nom: "Quasar", prix: 20, checked: false, quantite: 1, saveur: "" },
+    { nom: "Tête plate", prix: 13, checked: false, quantite: 1, saveur: [] },
+    { nom: "Khaloud", prix: 15, checked: false, quantite: 1, saveur: [] },
+    { nom: "Quasar", prix: 20, checked: false, quantite: 1, saveur: [] },
   ]);
 
   const saveurOptions = [
@@ -38,6 +39,7 @@ function Menu() {
     { nom: "Le burger du chef", prix: 14, checked: false, quantite: 1 },
     { nom: "Tortiglioni Forestiere", prix: 12, checked: false, quantite: 1 },
     { nom: "Tortiglioni Saumon Frais", prix: 14, checked: false, quantite: 1 },
+    { nom: "Tortiglioni Carbonara", prix: 12, checked: false, quantite: 1 },
   ]);
 
   const [desserts, setDesserts] = useState([
@@ -72,7 +74,7 @@ function Menu() {
     },
   ]);
 
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(0); // État pour stocker le total
 
   const handleCheckboxChange = (category, itemId) => {
     let updatedItems;
@@ -123,7 +125,7 @@ function Menu() {
     switch (category) {
       case "chicha":
         updatedItems = chicha.map((item, index) =>
-          index === itemId ? { ...item, quantite: quantity } : item
+          index === itemId ? { ...item, quantite: quantity, saveurs: [] } : item
         );
         setChicha(updatedItems);
         break;
@@ -161,12 +163,19 @@ function Menu() {
         break;
     }
   };
-  const handleSaveurChange = (itemId, saveur) => {
-    const updatedChicha = chicha.map((item, index) =>
-      index === itemId ? { ...item, saveur } : item
-    );
+
+  const handleSaveurChange = (itemId, saveurIndex, saveur) => {
+    const updatedChicha = chicha.map((item, index) => {
+      if (index === itemId) {
+        const updatedSaveurs = [...item.saveur];
+        updatedSaveurs[saveurIndex] = saveur;
+        return { ...item, saveur: updatedSaveurs };
+      }
+      return item;
+    });
     setChicha(updatedChicha);
   };
+
   const calculateTotal = () => {
     const items = [
       ...chicha,
@@ -177,9 +186,9 @@ function Menu() {
       ...supplements,
     ];
     const totale = items
-      .filter((item) => item.checked)
-      .reduce((acc, item) => acc + item.prix * item.quantite, 0);
-    setTotal(totale);
+      .filter((item) => item.checked) // Filtre les éléments cochés uniquement
+      .reduce((acc, item) => acc + item.prix * item.quantite, 0); // Calcule le total en multipliant le prix par la quantité pour chaque élément
+    setTotal(totale); // Met à jour le total dans l'état
   };
 
   // Appeler la fonction calculateTotal à chaque fois que les cases à cocher ou les quantités sont modifiées
@@ -190,18 +199,25 @@ function Menu() {
   return (
     <div>
       <h1>Menu</h1>
+
+      {/* Section Chicha */}
       <h2>Chicha</h2>
       <ul className="nopuce">
+        {/* Mappez chaque élément de la liste "chicha" */}
         {chicha.map((item, index) => (
-          <li key={item.id}>
+          <li key={index}>
+            {/* Case à cocher pour sélectionner l'élément */}
             <input
+              className="large-checkbox"
               type="checkbox"
               checked={item.checked}
               onChange={() => handleCheckboxChange("chicha", index)}
             />
+            {/* Nom et prix de l'élément */}
             <label>
               {item.nom} - {item.prix}€
             </label>
+            {/* Champ d'entrée pour la quantité */}
             <input
               type="number"
               value={item.quantite}
@@ -213,34 +229,51 @@ function Menu() {
                 )
               }
             />
+            {/* Affichez les saveurs si l'élément est sélectionné */}
             {item.checked && (
-              <select
-                value={item.saveur}
-                onChange={(e) => handleSaveurChange(index, e.target.value)}
-              >
-                <option value="">Sélectionner une saveur</option>
-                {saveurOptions.map((saveur) => (
-                  <option key={saveur} value={saveur}>
-                    {saveur}
-                  </option>
+              <div>
+                {Array.from({ length: item.quantite }).map((_, i) => (
+                  // Sélectionnez la saveur pour chaque quantité
+                  <select
+                    key={i}
+                    value={item.saveur[i] || ""}
+                    onChange={(e) =>
+                      handleSaveurChange(index, i, e.target.value)
+                    }
+                  >
+                    <option value="">Sélectionner une saveur</option>
+                    {/* Affichez les options de saveur */}
+                    {saveurOptions.map((saveur) => (
+                      <option key={saveur} value={saveur}>
+                        {saveur}
+                      </option>
+                    ))}
+                  </select>
                 ))}
-              </select>
+              </div>
             )}
           </li>
         ))}
       </ul>
+
+      {/* Section Boissons */}
       <h2>Boissons</h2>
       <ul className="nopuce">
+        {/* Mappez chaque élément de la liste "boissons" */}
         {boissons.map((item, index) => (
-          <li key={item}>
+          <li key={index}>
+            {/* Case à cocher pour sélectionner l'élément */}
             <input
+              className="large-checkbox"
               type="checkbox"
               checked={item.checked}
               onChange={() => handleCheckboxChange("boissons", index)}
             />
+            {/* Nom et prix de l'élément */}
             <label>
               {item.nom} - {item.prix}€
             </label>
+            {/* Champ d'entrée pour la quantité */}
             <input
               type="number"
               value={item.quantite}
@@ -255,18 +288,28 @@ function Menu() {
           </li>
         ))}
       </ul>
+
+      {/* Répétez le même schéma pour les autres sections (Entrées, Plats, Desserts, Suppléments) */}
+      {/* ... */}
+
+      {/* Section Entrées */}
       <h2>Entrées</h2>
       <ul className="nopuce">
+        {/* Mappez chaque élément de la liste "entrees" */}
         {entrees.map((item, index) => (
-          <li key={item}>
+          <li key={index}>
+            {/* Case à cocher pour sélectionner l'élément */}
             <input
+              className="large-checkbox"
               type="checkbox"
               checked={item.checked}
               onChange={() => handleCheckboxChange("entrees", index)}
             />
+            {/* Nom et prix de l'élément */}
             <label>
               {item.nom} - {item.prix}€
             </label>
+            {/* Champ d'entrée pour la quantité */}
             <input
               type="number"
               value={item.quantite}
@@ -281,18 +324,25 @@ function Menu() {
           </li>
         ))}
       </ul>
+
+      {/* Section Plats */}
       <h2>Plats</h2>
       <ul className="nopuce">
+        {/* Mappez chaque élément de la liste "plats" */}
         {plats.map((item, index) => (
-          <li key={item}>
+          <li key={index}>
+            {/* Case à cocher pour sélectionner l'élément */}
             <input
+              className="large-checkbox"
               type="checkbox"
               checked={item.checked}
               onChange={() => handleCheckboxChange("plats", index)}
             />
+            {/* Nom et prix de l'élément */}
             <label>
               {item.nom} - {item.prix}€
             </label>
+            {/* Champ d'entrée pour la quantité */}
             <input
               type="number"
               value={item.quantite}
@@ -307,18 +357,25 @@ function Menu() {
           </li>
         ))}
       </ul>
+
+      {/* Section Desserts */}
       <h2>Desserts</h2>
       <ul className="nopuce">
+        {/* Mappez chaque élément de la liste "desserts" */}
         {desserts.map((item, index) => (
-          <li key={item}>
+          <li key={index}>
+            {/* Case à cocher pour sélectionner l'élément */}
             <input
+              className="large-checkbox"
               type="checkbox"
               checked={item.checked}
               onChange={() => handleCheckboxChange("desserts", index)}
             />
+            {/* Nom et prix de l'élément */}
             <label>
               {item.nom} - {item.prix}€
             </label>
+            {/* Champ d'entrée pour la quantité */}
             <input
               type="number"
               value={item.quantite}
@@ -333,18 +390,25 @@ function Menu() {
           </li>
         ))}
       </ul>
+
+      {/* Section Suppléments */}
       <h2>Suppléments</h2>
       <ul className="nopuce">
+        {/* Mappez chaque élément de la liste "supplements" */}
         {supplements.map((item, index) => (
-          <li key={item}>
+          <li key={index}>
+            {/* Case à cocher pour sélectionner l'élément */}
             <input
+              className="large-checkbox"
               type="checkbox"
               checked={item.checked}
               onChange={() => handleCheckboxChange("supplements", index)}
             />
+            {/* Nom et prix de l'élément */}
             <label>
               {item.nom} - {item.prix}€
             </label>
+            {/* Champ d'entrée pour la quantité */}
             <input
               type="number"
               value={item.quantite}
@@ -359,6 +423,8 @@ function Menu() {
           </li>
         ))}
       </ul>
+
+      {/* Affichez le total */}
       <h2>Total: {total}€</h2>
     </div>
   );
